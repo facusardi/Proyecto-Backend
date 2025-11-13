@@ -1,19 +1,45 @@
 require('dotenv').config()
 
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-  console.error('Faltan SUPABASE_URL o SUPABASE_SERVICE_KEY en .env (backend).')
-  process.exit(1)
+const { createClient } = require('@supabase/supabase-js')
+
+// Polyfill para fetch si no existe (Node < 18)
+if (!globalThis.fetch) {
+  try {
+    globalThis.fetch = require('node-fetch')
+    console.log('[Supabase] Using node-fetch polyfill')
+  } catch (e) {
+    console.warn('[Supabase] No fetch available. Install node-fetch@2 or use Node >=18')
+  }
 }
 
-let _supabase = null
+const SUPABASE_URL = process.env.SUPABASE_URL || ''
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || ''
+
+let supabase = null
 
 async function getSupabase() {
-  if (_supabase) return _supabase
-  // import dinámico para evitar problemas con ESM-only packages
-  const mod = await import('@supabase/supabase-js')
-  const createClient = mod.createClient || mod.default?.createClient || mod.default
-  _supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-  return _supabase
+  // Log para debug
+  console.log('[Supabase] getSupabase called. URL present:', !!SUPABASE_URL, 'KEY present:', !!SUPABASE_SERVICE_KEY)
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+    const msg = 'Supabase env vars missing (SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY)'
+    console.error('[Supabase] ERROR:', msg)
+    throw new Error(msg)
+  }
+
+  if (supabase) {
+    console.log('[Supabase] Returning cached client')
+    return supabase
+  }
+
+  try {
+    supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+    console.log('[Supabase] Client created successfully')
+    return supabase
+  } catch (err) {
+    console.error('[Supabase] Error creating client:', err.message)
+    throw err
+  }
 }
 
 module.exports = { getSupabase }

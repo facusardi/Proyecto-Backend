@@ -104,8 +104,8 @@ exports.register = async (req, res) => {
 
     return res.status(201).json({ message: 'Usuario registrado', user: data?.[0] || null })
   } catch (err) {
-    console.error('Register exception:', err)
-    return res.status(500).json({ message: err.message || 'Error en servidor' })
+    console.error('Register error:', err)
+    res.status(500).json({ message: err.message })
   }
 }
 
@@ -113,11 +113,14 @@ exports.login = async (req, res) => {
   try {
     console.log('Login body raw:', req.body)
     const Email = req.body.Email || req.body.email || null
+    const Apodo = req.body.Apodo || req.body.apodo || null
     const Password = req.body.Password || req.body.password || null
-    if (!Email || !Password) return res.status(400).json({ message: 'Faltan datos' })
+    if (!Password || (!Email && !Apodo)) return res.status(400).json({ message: 'Faltan datos' })
 
     const supabase = await getSupabase()
-    const resp = await supabase.from(TABLE).select('*').eq('Email', Email).limit(1)
+    // Buscar por Email o por Apodo
+    const filter = Email ? `Email.eq.${Email}` : `Apodo.eq.${Apodo}`
+    const resp = await supabase.from(TABLE).select('*').or(filter).limit(1)
     console.log('Login user fetch:', resp)
     const user = resp.data && resp.data[0]
     if (!user) return res.status(401).json({ message: 'Credenciales inválidas' })
@@ -129,7 +132,7 @@ exports.login = async (req, res) => {
     delete user.Password
     return res.json({ token, user })
   } catch (err) {
-    console.error('Login exception:', err)
-    return res.status(500).json({ message: err.message || 'Error en servidor' })
+    console.error('Login error:', err)
+    res.status(500).json({ message: err.message })
   }
 }

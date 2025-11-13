@@ -1,11 +1,8 @@
 const express = require('express')
 const router = express.Router()
-const colabs = require('../controllers/colabsController')
-const users = require('../controllers/usersController')
 
-router.get('/colabs', colabs.getColabs)
-router.post('/colabs', colabs.createColab)
-
-router.get('/usuarios', users.getUsers)
+// Rutas de datos (usuarios, colabs, intereses)
+// Ejemplo mínimo
+router.get('/health', (req, res) => res.json({ ok: true }))
 
 module.exports = router
