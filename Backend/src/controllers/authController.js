@@ -78,18 +78,27 @@ exports.register = async (req, res) => {
     }
 
     const supabase = await getSupabase()
-    const { data: existing, error: errFind } = await supabase
+    
+    // Verificar si el email ya existe
+    const { data: existingEmail } = await supabase
       .from(TABLE)
       .select('id_User')
-      .or(`Apodo.eq.${Apodo},Email.eq.${Email}`)
+      .eq('Email', Email)
       .limit(1)
 
-    if (errFind) {
-      console.error('Error checking existing user:', errFind)
-      return res.status(500).json({ message: 'Error servidor' })
-    }
+    // Verificar si el apodo ya existe
+    const { data: existingApodo } = await supabase
+      .from(TABLE)
+      .select('id_User')
+      .eq('Apodo', Apodo)
+      .limit(1)
 
-    if (existing && existing.length) return res.status(400).json({ message: 'Apodo o email ya en uso' })
+    const existing = (existingEmail && existingEmail.length > 0) || (existingApodo && existingApodo.length > 0)
+
+    if (existing) {
+      console.log('User already exists')
+      return res.status(400).json({ message: 'Apodo o email ya en uso' })
+    }
 
     const hashed = await hashPassword(Password)
     const { data, error } = await supabase
@@ -99,9 +108,11 @@ exports.register = async (req, res) => {
 
     console.log('Insert result:', { data, error })
     if (error) {
+      console.error('Insert error:', error)
       return res.status(500).json({ message: error.message || 'Error insert' })
     }
 
+    console.log('User registered successfully:', data?.[0])
     return res.status(201).json({ message: 'Usuario registrado', user: data?.[0] || null })
   } catch (err) {
     console.error('Register error:', err)
