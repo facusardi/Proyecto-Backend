@@ -14,14 +14,19 @@ console.log('[Server] Starting backend...');
 try {
   const authRoutes = require('./routes/authRoutes');
   const dataRoutes = require('./routes/dataRoutes');
+  const interesesRoutes = require('./routes/InteresesRoutes'); // 🔥 NUEVA LÍNEA
   
   console.log('[Server] Routes imported successfully')
   
   // Montar rutas
   app.use('/api/auth', authRoutes);
   app.use('/api', dataRoutes);
+  app.use('/api/intereses', interesesRoutes); // 🔥 NUEVA LÍNEA
   
-  console.log('[Server] Routes mounted at /api/auth and /api')
+  console.log('[Server] Routes mounted at:')
+  console.log('  - /api/auth')
+  console.log('  - /api')
+  console.log('  - /api/intereses') // 🔥 NUEVA LÍNEA
 } catch (err) {
   console.error('[Server] Error loading routes:', err.message)
   process.exit(1)
@@ -47,5 +52,10 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
   console.log(`[Server] ✓ Listening on port ${PORT}`)
-  console.log(`[Server] POST http://localhost:${PORT}/api/auth/register should work`)
+  console.log(`[Server] Available endpoints:`)
+  console.log(`  POST http://localhost:${PORT}/api/auth/register`)
+  console.log(`  POST http://localhost:${PORT}/api/auth/login`)
+  console.log(`  GET  http://localhost:${PORT}/api/intereses/user/:userId`)
+  console.log(`  POST http://localhost:${PORT}/api/intereses/user/:userId`)
+  console.log(`  GET  http://localhost:${PORT}/api/intereses/tipos`)
 })
