@@ -13,16 +13,15 @@ if (!globalThis.fetch) {
 }
 
 const SUPABASE_URL = process.env.SUPABASE_URL || ''
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || ''
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || ''
 
 let supabase = null
 
 async function getSupabase() {
-  // Log para debug
   console.log('[Supabase] getSupabase called. URL present:', !!SUPABASE_URL, 'KEY present:', !!SUPABASE_SERVICE_KEY)
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-    const msg = 'Supabase env vars missing (SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY)'
+    const msg = 'Supabase env vars missing (SUPABASE_URL or SUPABASE_SERVICE_KEY)'
     console.error('[Supabase] ERROR:', msg)
     throw new Error(msg)
   }
@@ -33,7 +32,13 @@ async function getSupabase() {
   }
 
   try {
-    supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+    supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false
+      }
+    })
     console.log('[Supabase] Client created successfully')
     return supabase
   } catch (err) {
